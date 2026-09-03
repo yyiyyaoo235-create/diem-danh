@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sổ Điểm Danh &amp; Học Phí</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EAF3FB;
+    --surface:#FFFFFF;
+    --ink:#243447;
+    --ink-soft:#64798D;
+    --jade:#5B90C7;
+    --jade-dark:#2E5478;
+    --jade-tint:#DCEAF7;
+    --gold:#C98A4B;
+    --gold-tint:#F5E7D6;
+    --brick:#D97B72;
+    --brick-tint:#FBE5E2;
+    --line:#CFE0F0;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;padding:0;}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important;}
+  }
+  body{
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    background-color:var(--paper);
+    background-image:
+      repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(91,144,199,0.06) 28px);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces', Georgia, serif; margin:0; font-weight:600;}
+  button, input, select, textarea{font-family:inherit; font-size:15px; color:inherit;}
+  button{cursor:pointer;}
+  a{color:var(--jade-dark);}
+  :focus-visible{outline:2px solid var(--jade); outline-offset:2px;}
+
+  #loading{
+    display:flex; align-items:center; justify-content:center;
+    min-height:60vh; color:var(--ink-soft); font-size:15px;
+  }
+  #app[hidden], #loading[hidden]{display:none;}
+
+  .login-card{max-width:380px; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:30px 24px; text-align:center; box-shadow:0 8px 28px rgba(36,52,71,0.10);}
+  .login-seal{width:52px; height:52px; border-radius:50%; background:var(--jade-tint); color:var(--jade-dark); display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 14px;}
+  .login-card h1{font-family:'Fraunces',serif; font-size:20px; margin-bottom:8px;}
+  .login-card .hint{font-size:13px; color:var(--ink-soft); margin-bottom:20px; line-height:1.55;}
+  .login-card .field{text-align:left; margin-bottom:4px; display:block;}
+  .login-card .field span{display:block; font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;}
+  .login-card input{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; background:#fff;}
+  .login-card input:focus{border-color:var(--jade);}
+  .login-err{color:var(--brick); font-size:12.5px; margin:6px 0 12px; text-align:left;}
+  .login-note{font-size:11px; color:var(--ink-soft); margin-top:16px; line-height:1.55; text-align:left; padding-top:14px; border-top:1px solid var(--line);}
+  .logged-in-email{font-size:11.5px; color:var(--ink-soft);}
+  .btn-linklike{background:none; border:none; color:var(--jade-dark); font-size:12.5px; text-decoration:underline; padding:0;}
+
+  .container{max-width:720px; margin:0 auto; padding:0 16px 48px;}
+
+  header.topbar{
+    padding:22px 16px 14px;
+    max-width:720px; margin:0 auto;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .seal{
+    flex:none; width:40px; height:40px; border-radius:8px;
+    background:var(--jade); color:#F4EFE0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:19px; font-weight:600;
+    transform:rotate(-6deg);
+    box-shadow:0 1px 0 rgba(0,0,0,0.08);
+  }
+  .brand h1{font-size:21px; color:var(--ink);}
+  .brand .today{margin:2px 0 0; font-size:13px; color:var(--ink-soft);}
+
+  nav.tabbar{
+    position:sticky; top:0; z-index:10;
+    background:var(--paper);
+    display:flex; gap:6px; overflow-x:auto;
+    padding:10px 16px 12px;
+    border-bottom:1px solid var(--line);
+    scrollbar-width:none;
+  }
+  nav.tabbar::-webkit-scrollbar{display:none;}
+  .tab-btn{
+    flex:none; border:1px solid transparent; background:transparent;
+    padding:8px 14px; border-radius:999px; font-size:14px; font-weight:500;
+    color:var(--ink-soft); white-space:nowrap;
+  }
+  .tab-btn.active{background:var(--jade); color:#fff;}
+
+  main{max-width:720px; margin:0 auto; padding:18px 16px 60px;}
+  .panel-inner{display:flex; flex-direction:column; gap:16px;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .card-title{font-size:16px; margin-bottom:10px;}
+
+  .field{display:flex; flex-direction:column; gap:5px; margin-bottom:12px;}
+  .field span{font-size:13px; color:var(--ink-soft); font-weight:500;}
+  .field:last-child{margin-bottom:0;}
+  input[type=text], input[type=number], input[type=date], input[type=month], select, textarea{
+    border:1px solid var(--line); border-radius:8px; padding:10px 11px;
+    background:#fff; min-height:42px; width:100%;
+  }
+  textarea{resize:vertical; min-height:60px;}
+  input:focus, select:focus, textarea:focus{border-color:var(--jade);}
+
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  @media (max-width:640px){
+    .row-2, .row-3{grid-template-columns:1fr;}
+  }
+
+  .empty-note{color:var(--ink-soft); font-size:14px; padding:6px 2px;}
+  .hint{color:var(--ink-soft); font-size:13px; margin:4px 0 0;}
+  .link-btn{background:none; border:none; color:var(--jade-dark); text-decoration:underline; padding:0; font-size:inherit;}
+
+  .btn-primary{
+    background:var(--jade); color:#fff; border:none; border-radius:8px;
+    padding:11px 18px; font-weight:600; font-size:15px;
+  }
+  .btn-primary:hover{background:var(--jade-dark);}
+  .btn-outline{
+    background:#fff; color:var(--jade-dark); border:1px solid var(--jade);
+    border-radius:8px; padding:10px 16px; font-weight:500;
+  }
+  .btn-outline.small, .btn-primary.small{padding:7px 12px; font-size:13px;}
+  .btn-text{background:none; border:none; color:var(--jade-dark); font-weight:500; padding:4px 6px;}
+  .btn-text.danger{color:var(--brick);}
+  .file-btn{display:inline-flex; align-items:center; cursor:pointer;}
+  .row-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+
+  /* Attendance */
+  .att-list{display:flex; flex-direction:column; gap:12px; margin:14px 0;}
+  .att-card{border:1px solid var(--line); border-radius:10px; padding:12px; background:#FBFBF8;}
+  .att-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .att-name{font-weight:600;}
+  .att-price{font-size:12.5px; color:var(--gold); font-weight:500;}
+  .seg{display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; width:fit-content;}
+  .seg-btn{border:none; background:#fff; padding:7px 16px; font-size:14px; font-weight:500; color:var(--ink-soft);}
+  .seg-btn.active-present{background:var(--jade-tint); color:var(--jade-dark);}
+  .seg-btn.active-absent{background:var(--brick-tint); color:var(--brick);}
+  .chk-row{display:flex; align-items:center; gap:8px; margin-top:9px; font-size:13.5px; color:var(--ink-soft);}
+  .chk-row input{width:auto; min-height:auto;}
+  .att-comment{margin-top:9px;}
+
+  /* Calendar */
+  .cal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .cal-nav{background:#fff; border:1px solid var(--line); border-radius:8px; width:34px; height:34px; font-size:18px; line-height:1; color:var(--ink-soft);}
+  .cal-nav:hover{border-color:var(--jade); color:var(--jade-dark);}
+  .cal-month{font-family:'Fraunces',serif; font-size:17px; font-weight:600;}
+  .cal-weekdays{display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:11.5px; color:var(--ink-soft); font-weight:500; padding-bottom:6px; border-bottom:1px solid var(--line); margin-bottom:2px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .cal-cell{background:#fff; min-height:112px; padding:5px 4px; display:flex; flex-direction:column; gap:3px; cursor:pointer; align-items:flex-start;}
+  .cal-cell:hover{background:var(--jade-tint);}
+  .cal-cell.other-month{background:#F5F9FD;}
+  .cal-cell.other-month .cal-daynum{color:#A9BBCE;}
+  .cal-daynum{font-size:12.5px; font-weight:600; color:var(--ink);}
+  .cal-cell.today .cal-daynum{color:#fff; background:var(--jade); border-radius:999px; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11.5px;}
+  .cal-cell.sunday .cal-daynum{color:var(--brick);}
+  .cal-cell.selected{outline:2px solid var(--jade); outline-offset:-2px; background:var(--jade-tint);}
+  .cal-pill{font-size:9.5px; border-radius:5px; padding:1px 4px; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500;}
+  .cal-pill-0{background:#DCEAF7; color:#2E5478;}
+  .cal-pill-1{background:#D7F0EC; color:#1F6F63;}
+  .cal-pill-2{background:#E3DFF7; color:#5847A6;}
+  .cal-pill-3{background:#D6F0F7; color:#1D6E82;}
+  .cal-pill-4{background:#E6E5F7; color:#47508F;}
+  .cal-pill-5{background:#DCF3E9; color:#1F7A55;}
+  .cal-pill-6{background:#D9E3F5; color:#33538A;}
+  .cal-pill-7{background:#DFF3F5; color:#1B6E77;}
+  .cal-more{font-size:9px; color:var(--ink-soft); font-weight:500;}
+  @media (max-width:480px){
+    .cal-cell{min-height:92px; padding:4px 3px;}
+    .cal-pill{font-size:8.3px; padding:1px 3px;}
+  }
+  .dd-selected-date{font-size:15px; margin-bottom:12px;}
+
+  .mini-list, .history-list{display:flex; flex-direction:column; gap:10px;}
+  .mini-row{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--line);}
+  .mini-row:last-child{border-bottom:none;}
+  .mini-actions{display:flex; gap:4px; flex:none;}
+
+  /* History */
+  .history-card{display:flex; flex-direction:column; gap:6px;}
+  .history-top{display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .hist-students{margin-top:8px; display:flex; flex-direction:column; gap:8px;}
+  .hist-student{border-top:1px dashed var(--line); padding-top:8px;}
+  .hist-student-head{display:flex; justify-content:space-between; align-items:center; font-size:14px;}
+  .badge{font-size:12px; padding:2px 9px; border-radius:999px; font-weight:500;}
+  .badge-present{background:var(--jade-tint); color:var(--jade-dark);}
+  .badge-absent{background:var(--brick-tint); color:var(--brick);}
+
+  /* Classes */
+  .class-card{display:flex; flex-direction:column; gap:10px;}
+  .class-head{display:flex; align-items:center; gap:10px;}
+  .class-name-input{font-weight:600; font-size:16px; border-color:transparent; background:transparent; padding:6px 4px;}
+  .class-name-input:focus{border-color:var(--jade); background:#fff;}
+  .student-rows{display:flex; flex-direction:column; gap:8px;}
+  .student-row{display:grid; grid-template-columns:1.4fr 0.8fr 1fr auto; gap:8px; align-items:center;}
+  @media (max-width:640px){.student-row{grid-template-columns:1fr 1fr; grid-template-rows:auto auto; }}
+  .row-remove{background:none; border:1px solid var(--line); border-radius:8px; width:36px; height:36px; color:var(--brick);}
+
+  /* Học phí */
+  .bill-summary{text-align:center;}
+  .hero-amount{font-family:'Fraunces',serif; font-size:38px; font-weight:700; color:var(--gold); margin:10px 0;}
+  .ledger-table{width:100%; border-collapse:collapse; margin-top:14px; text-align:left; font-size:14px;}
+  .ledger-table th{font-weight:500; color:var(--ink-soft); border-bottom:1px solid var(--ink); padding:6px 4px; font-size:12.5px;}
+  .ledger-table td{padding:7px 4px; border-bottom:1px solid var(--line);}
+
+  #billRenderArea{position:fixed; left:-9999px; top:0;}
+  .bill-card{width:480px; background:#fff; padding:32px; font-family:'IBM Plex Sans',sans-serif; color:#243447;}
+  .bill-top{display:flex; justify-content:space-between; align-items:center;}
+  .bill-org{font-weight:600; font-size:15px;}
+  .bill-seal{font-family:'Fraunces',serif; color:var(--jade); border:1.5px solid var(--jade); border-radius:8px; padding:4px 10px; font-size:13px; transform:rotate(-4deg);}
+  .bill-title{font-size:24px; margin:18px 0 14px; color:var(--jade-dark);}
+  .bill-greeting{margin-bottom:18px;}
+  .bill-greeting-date{font-size:12.5px; color:var(--ink-soft); margin:0 0 12px;}
+  .bill-greeting-title{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:0 0 12px;}
+  .bill-greeting-text{font-size:14.5px; line-height:1.65; margin:0; color:var(--ink);}
+  .bill-amount-highlight{color:var(--gold); font-weight:700;}
+  .bill-meta{display:flex; flex-direction:column; gap:4px; font-size:14px; margin-bottom:14px;}
+  .bill-meta div{display:flex; justify-content:space-between; border-bottom:1px dotted var(--line); padding:3px 0;}
+  .bill-meta span{color:var(--ink-soft);}
+  .bill-table{width:100%; border-collapse:collapse; font-size:13px; margin-bottom:14px;}
+  .bill-table th{text-align:left; border-bottom:1px solid #243447; padding:5px 4px; font-weight:500; color:var(--ink-soft);}
+  .bill-table td{padding:6px 4px; border-bottom:1px solid var(--line);}
+  .bill-sum{display:flex; justify-content:space-between; align-items:baseline; border-top:1px solid var(--ink); padding-top:10px;}
+  .bill-total{font-family:'Fraunces',serif; font-size:26px; color:var(--gold); font-weight:700;}
+  .bill-fee-row{display:flex; justify-content:space-between; align-items:baseline; font-size:15px; padding:4px 0;}
+  .bill-fee-row strong{font-size:16px;}
+  .bill-pay-box{margin-top:10px; background:var(--brick); color:#fff; border-radius:10px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .bill-pay-box .bill-pay-label{font-weight:600; font-size:15px;}
+  .bill-pay-box .bill-pay-amount{font-family:'Fraunces',serif; font-size:24px; font-weight:700;}
+  .bill-words{margin-top:8px; font-size:12.5px; color:var(--ink-soft); font-style:italic;}
+  .bill-bank{margin-top:16px; background:var(--jade-tint); border-radius:8px; padding:12px; font-size:13px; line-height:1.6; display:flex; align-items:center; gap:12px;}
+  .bill-bank-qr{flex:none; width:76px; height:76px; border-radius:6px; overflow:hidden; background:#fff; border:1px solid var(--line);}
+  .bill-bank-qr img{width:100%; height:100%; object-fit:contain; display:block;}
+  .bill-bank-text{flex:1; min-width:0;}
+  .bill-bank-text .bank-label{color:var(--ink-soft); font-size:12px;}
+
+  .qr-preview{display:flex; align-items:center; gap:12px; margin:4px 0 12px;}
+  .qr-preview img{width:64px; height:64px; object-fit:contain; border:1px solid var(--line); border-radius:6px; background:#fff;}
+  .qr-preview .empty-note{padding:0; margin:0;}
+
+  #toast{
+    position:fixed; left:50%; bottom:24px; transform:translate(-50%,20px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:14px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+    z-index:50;
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+
+<div id="loading">Đang tải dữ liệu...</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="brand">
+      <span class="seal">签</span>
+      <div>
+        <h1>Sổ Điểm Danh &amp; Học Phí</h1>
+        <p class="today" id="todayLabel"></p>
+      </div>
+    </div>
+  </header>
+
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-tab="diemdanh">Điểm danh</button>
+    <button class="tab-btn" data-tab="lichsu">Lịch sử</button>
+    <button class="tab-btn" data-tab="lophocsinh">Lớp &amp; học sinh</button>
+    <button class="tab-btn" data-tab="hocphi">Học phí</button>
+    <button class="tab-btn" data-tab="caidat">Cài đặt</button>
+  </nav>
+
+  <main>
+    <section id="tab-diemdanh" class="tab-panel">
+      <div class="panel-inner">
+        <div class="card">
+          <div class="cal-header">
+            <button class="cal-nav" id="cal-prev" type="button" aria-label="Tháng trước">‹</button>
+            <div class="cal-month" id="cal-monthLabel"></div>
+            <button class="cal-nav" id="cal-next" type="button" aria-label="Tháng sau">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Th 2</span><span>Th 3</span><span>Th 4</span><span>Th 5</span><span>Th 6</span><span>Th 7</span><span>CN</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <div class="card">
+          <p class="dd-selected-date"><strong id="dd-selected-date-label">Ngày —</strong></p>
+          <input type="hidden" id="dd-date">
+          <div class="row-2">
+            <label class="field"><span>Lớp dạy</span><select id="dd-class"></select></label>
+            <label class="field"><span>Giờ dạy</span><input type="text" id="dd-time" placeholder="VD: 18:00 - 19:30"></label>
+          </div>
+          <div id="dd-noclass" class="empty-note" hidden>Chưa có lớp nào — <button class="link-btn" id="dd-goto-class">thêm lớp ngay</button>.</div>
+          <div id="dd-form" hidden>
+            <label class="field"><span>Nội dung buổi học</span>
+              <textarea id="dd-content" rows="2" placeholder="VD: Bài 5 - Từ vựng gia đình, luyện nói theo mẫu câu..."></textarea>
+            </label>
+            <div id="dd-list" class="att-list"></div>
+            <button class="btn-primary" id="dd-save" style="width:100%;">Lưu buổi học</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Buổi học đã lưu ngày này</h3>
+          <div id="dd-today-list" class="mini-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-lichsu" class="tab-panel" hidden>
+      <div class="panel-inner">
+        <div class="card">
+          <div class="row-3">
+            <label class="field"><span>Lớp</span><select id="ls-class"></select></label>
+            <label class="field"><span>Từ ngày</span><input type="date" id="ls-from"></label>
+            <label class="field"><span>Đến ngày</span><input type="date" id="ls-to"></label>
+          </div>
+        </div>
+        <div id="ls-list" class="history-list"></div>
+      </div>
+    </section>
+
+    <section id="tab-lophocsinh" class="tab-panel" hidden>
+      <div class="panel-inner">
+        <button class="btn-outline" id="lh-add-toggle">+ Thêm lớp mới</button>
+        <div class="card" id="lh-new-form" hidden>
+          <label class="field"><span>Tên lớp</span><input type="text" id="lh-new-name" placeholder="VD: HSK1 - Nhóm sáng thứ 3"></label>
+          <div class="student-rows" id="lh-new-students"></div>
+          <div class="row-actions">
+            <button class="btn-outline small" id="lh-new-addrow" type="button">+ Thêm học sinh</button>
+          </div>
+          <div class="row-actions">
+            <button class="btn-primary" id="lh-new-save">Lưu lớp</button>
+            <button class="btn-text" id="lh-new-cancel">Hủy</button>
+          </div>
+        </div>
+        <div id="lh-list"></div>
+      </div>
+    </section>
+
+    <section id="tab-hocphi" class="tab-panel" hidden>
+      <div class="panel-inner">
+        <div class="card">
+          <h3 class="card-title">Tính cả lớp / nhóm</h3>
+          <p class="hint" style="margin-bottom:10px;">Dùng cho lớp nhóm (1:2, 1:3) — xem học phí từng em trong lớp cùng lúc, mỗi em vẫn giữ đơn giá riêng.</p>
+          <div class="row-2">
+            <label class="field"><span>Lớp</span><select id="hpg-class"></select></label>
+            <label class="field"><span>Tháng</span><input type="month" id="hpg-month"></label>
+          </div>
+          <button class="btn-primary" id="hpg-calc" style="width:100%;">Tính học phí cả lớp</button>
+        </div>
+        <div id="hpg-result"></div>
+
+        <div class="card">
+          <h3 class="card-title">Tính riêng 1 học sinh</h3>
+          <label class="field"><span>Học sinh</span><select id="hp-student"></select></label>
+          <label class="field"><span>Tháng</span><input type="month" id="hp-month"></label>
+          <button class="btn-primary" id="hp-calc" style="width:100%;">Tính học phí</button>
+        </div>
+        <div id="hp-result"></div>
+      </div>
+    </section>
+
+    <section id="tab-caidat" class="tab-panel" hidden>
+      <div class="panel-inner">
+        <div class="card">
+          <h3 class="card-title">Thông tin hiển thị trên bill</h3>
+          <label class="field"><span>Tên giáo viên / trung tâm</span><input type="text" id="cd-teacher" placeholder="VD: Cô Hương - Gia sư tiếng Trung"></label>
+          <label class="field"><span>Ngân hàng</span><input type="text" id="cd-bank" placeholder="VD: Vietcombank"></label>
+          <label class="field"><span>Số tài khoản</span><input type="text" id="cd-account"></label>
+          <label class="field"><span>Tên chủ tài khoản</span><input type="text" id="cd-holder"></label>
+          <label class="field"><span>Mã QR chuyển khoản (VietQR, ảnh chụp màn hình...)</span>
+            <div class="qr-preview" id="cd-qr-preview"><p class="empty-note">Chưa có mã QR</p></div>
+            <div class="row-actions" style="margin-top:0;">
+              <label class="btn-outline small file-btn">Tải ảnh QR lên<input type="file" id="cd-qr-file" accept="image/*" hidden></label>
+              <button class="btn-text danger" id="cd-qr-remove" type="button" hidden>Xoá mã QR</button>
+            </div>
+          </label>
+          <button class="btn-primary" id="cd-save">Lưu cài đặt</button>
+        </div>
+        <div class="card">
+          <h3 class="card-title">Sao lưu dữ liệu</h3>
+          <p class="hint">Dữ liệu tự lưu mỗi khi bạn dùng ứng dụng qua Claude. Tải file sao lưu để phòng khi cần chuyển máy hoặc khôi phục.</p>
+          <div class="row-actions">
+            <button class="btn-outline" id="cd-export" type="button">Tải file sao lưu (.json)</button>
+            <label class="btn-outline file-btn">Khôi phục từ file<input type="file" id="cd-import" accept="application/json" hidden></label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="billRenderArea"></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(function(){
+
+  var state = { settings:{teacherName:'',bankName:'',bankAccount:'',accountHolder:'',qrImage:''}, classes:[], sessions:[] };
+
+  function qs(sel, root){ return (root||document).querySelector(sel); }
+  function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+  function escapeHtml(str){
+    return String(str==null?'':str).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function formatVND(n){ return (Number(n)||0).toLocaleString('vi-VN') + 'đ'; }
+
+  function numberToVietnameseWords(num){
+    num = Math.round(Number(num)||0);
+    if(num===0) return 'Không đồng';
+    var chuSo = ['không','một','hai','ba','bốn','năm','sáu','bảy','tám','chín'];
+    function docBaSo(n, hasHigher){
+      // n: 0-999
+      var tram = Math.floor(n/100), chuc = Math.floor((n%100)/10), donvi = n%10;
+      var s = '';
+      if(tram>0 || hasHigher){ s += chuSo[tram]+' trăm '; }
+      if(chuc===0){
+        if(donvi>0){ s += (tram>0||hasHigher? 'lẻ ' : '') + chuSo[donvi]; }
+      } else if(chuc===1){
+        s += 'mười ';
+        if(donvi===1){ s += 'một'; }
+        else if(donvi===5){ s += 'lăm'; }
+        else if(donvi>0){ s += chuSo[donvi]; }
+      } else {
+        s += chuSo[chuc]+' mươi ';
+        if(donvi===1){ s += 'mốt'; }
+        else if(donvi===5){ s += 'lăm'; }
+        else if(donvi>0){ s += chuSo[donvi]; }
+      }
+      return s.trim();
+    }
+    var isNeg = num<0; num = Math.abs(num);
+    var groups = [];
+    while(num>0){ groups.unshift(num%1000); num = Math.floor(num/1000); }
+    if(groups.length===0) groups=[0];
+    var units = ['','nghìn','triệu','tỷ'];
+    var parts = [];
+    var n = groups.length;
+    for(var i=0;i<n;i++){
+      var g = groups[i];
+      if(g===0) continue;
+      var hasHigher = i>0 && groups.slice(0,i).some(function(x){return x>0;});
+      var unitIdx = n-1-i;
+      var words = docBaSo(g, false);
+      if(unitIdx>0) words += ' '+units[unitIdx];
+      parts.push(words);
+    }
+    var result = parts.join(' ').replace(/\s+/g,' ').trim();
+    result = result.charAt(0).toUpperCase()+result.slice(1);
+    return (isNeg?'Âm ':'')+result+' đồng';
+  }
+  function todayStr(){
+    var d=new Date(), pad=function(n){return String(n).padStart(2,'0');};
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  }
+  function currentMonthStr(){
+    var d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+  function formatDate(iso){
+    var p = iso.split('-');
+    return p[2]+'/'+p[1]+'/'+p[0];
+  }
+  function formatDateGreeting(iso){
+    var d = new Date(iso+'T00:00:00');
+    return 'Ngày '+d.getDate()+' thg '+(d.getMonth()+1)+' năm '+d.getFullYear();
+  }
+  var toastTimer;
+  function showToast(msg){
+    var t = qs('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  // ---------- storage (localStorage của trình duyệt — lưu ngay trên máy này) ----------
+  var LS_PREFIX = 'diemdanh_';
+  function safeGet(key, fallback){
+    try{
+      var raw = localStorage.getItem(LS_PREFIX+key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function safeSet(key, value){
+    try{ localStorage.setItem(LS_PREFIX+key, JSON.stringify(value)); }
+    catch(e){ showToast('Lưu thất bại, thử lại nhé.'); }
+    return Promise.resolve();
+  }
+  function saveSettings(){ return safeSet('settings', state.settings); }
+  function saveClasses(){ return safeSet('classes', state.classes); }
+  function saveSessions(){ return safeSet('sessions', state.sessions); }
+
+  function findStudent(studentId){
+    for(var i=0;i<state.classes.length;i++){
+      var cls = state.classes[i];
+      for(var j=0;j<cls.students.length;j++){
+        if(cls.students[j].id===studentId) return {student:cls.students[j], cls:cls};
+      }
+    }
+    return null;
+  }
+
+  function populateClassSelect(selectEl, includeAll){
+    selectEl.innerHTML='';
+    if(includeAll){
+      var o=document.createElement('option'); o.value=''; o.textContent='Tất cả'; selectEl.appendChild(o);
+    }
+    state.classes.forEach(function(c){
+      var o=document.createElement('option');
+      o.value=c.id;
+      o.textContent = c.name+' ('+c.students.length+' HS)';
+      selectEl.appendChild(o);
+    });
+  }
+
+  // ---------- Tabs ----------
+  var panels = {
+    diemdanh: qs('#tab-diemdanh'), lichsu: qs('#tab-lichsu'),
+    lophocsinh: qs('#tab-lophocsinh'), hocphi: qs('#tab-hocphi'), caidat: qs('#tab-caidat')
+  };
+  qsa('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      qsa('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      Object.keys(panels).forEach(function(k){ panels[k].hidden = (k!==btn.dataset.tab); });
+      if(btn.dataset.tab==='lichsu') refreshHistory();
+      if(btn.dataset.tab==='lophocsinh') refreshClasses();
+      if(btn.dataset.tab==='hocphi') refreshHocPhiOptions();
+      if(btn.dataset.tab==='diemdanh') refreshDiemDanh();
+      if(btn.dataset.tab==='caidat') refreshSettingsForm();
+    });
+  });
+
+  // ---------- Điểm danh ----------
+  var ddDate = qs('#dd-date'), ddClass = qs('#dd-class'), ddNoClass = qs('#dd-noclass'),
+      ddFormWrap = qs('#dd-form'), ddContent = qs('#dd-content'), ddList = qs('#dd-list'),
+      ddTodayList = qs('#dd-today-list'), ddTime = qs('#dd-time'), ddDateLabel = qs('#dd-selected-date-label');
+
+  // ---- Lịch tháng ----
+  var calState = { year:null, month:null }; // month: 0-indexed
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function isoOf(y,m,d){ return y+'-'+pad2(m+1)+'-'+pad2(d); }
+
+  var CAL_PILL_COLORS = 8;
+  function classColorIdx(classId){
+    var h = 0;
+    for(var i=0;i<classId.length;i++){ h = (h*31 + classId.charCodeAt(i)) & 0xffffffff; }
+    return Math.abs(h) % CAL_PILL_COLORS;
+  }
+
+  function renderCalendar(){
+    if(calState.year===null){
+      var t = new Date(); calState.year = t.getFullYear(); calState.month = t.getMonth();
+    }
+    var y = calState.year, m = calState.month;
+    qs('#cal-monthLabel').textContent = 'Tháng '+pad2(m+1)+'/'+y;
+    var grid = qs('#cal-grid'); grid.innerHTML='';
+    var firstDow = (new Date(y,m,1).getDay()+6)%7; // 0=Mon..6=Sun
+    var daysInMonth = new Date(y,m+1,0).getDate();
+    var daysInPrevMonth = new Date(y,m,0).getDate();
+    var totalCells = Math.ceil((firstDow+daysInMonth)/7)*7;
+    var todayIso = todayStr();
+    for(var i=0;i<totalCells;i++){
+      var dayNum, cy=y, cm=m, isOther=false;
+      if(i<firstDow){ dayNum = daysInPrevMonth-firstDow+1+i; cm=m-1; if(cm<0){cm=11;cy=y-1;} isOther=true; }
+      else if(i>=firstDow+daysInMonth){ dayNum = i-(firstDow+daysInMonth)+1; cm=m+1; if(cm>11){cm=0;cy=y+1;} isOther=true; }
+      else { dayNum = i-firstDow+1; }
+      var iso = isoOf(cy,cm,dayNum);
+      var dow = (new Date(cy,cm,dayNum).getDay()+6)%7;
+      var cell = document.createElement('div');
+      cell.className = 'cal-cell'+(isOther?' other-month':'')+(iso===todayIso?' today':'')+(dow===6?' sunday':'')+(iso===ddDate.value?' selected':'');
+      cell.dataset.date = iso;
+      var html = '<span class="cal-daynum">'+dayNum+'</span>';
+      var dayItems = state.sessions.filter(function(s){return s.date===iso;});
+      dayItems.slice(0,4).forEach(function(s){
+        var c = state.classes.find(function(x){return x.id===s.classId;});
+        var colorIdx = classColorIdx(s.classId);
+        html += '<span class="cal-pill cal-pill-'+colorIdx+'">'+escapeHtml(c?c.name:'(lớp đã xóa)')+'</span>';
+      });
+      if(dayItems.length>4) html += '<span class="cal-more">+'+(dayItems.length-4)+' buổi</span>';
+      cell.innerHTML = html;
+      cell.addEventListener('click', function(){ selectDate(this.dataset.date); });
+      grid.appendChild(cell);
+    }
+  }
+  qs('#cal-prev').addEventListener('click', function(){
+    calState.month--; if(calState.month<0){calState.month=11; calState.year--;}
+    renderCalendar();
+  });
+  qs('#cal-next').addEventListener('click', function(){
+    calState.month++; if(calState.month>11){calState.month=0; calState.year++;}
+    renderCalendar();
+  });
+
+  function selectDate(iso){
+    ddDate.value = iso;
+    ddDateLabel.textContent = 'Ngày '+formatDate(iso);
+    renderCalendar();
+    loadAttendanceForm();
+    renderTodayList();
+  }
+
+  function refreshDiemDanh(){
+    if(!ddDate.value) ddDate.value = todayStr();
+    qs('#todayLabel').textContent = 'Hôm nay: ' + formatDate(todayStr());
+    var d0 = new Date(ddDate.value+'T00:00:00');
+    calState.year = d0.getFullYear(); calState.month = d0.getMonth();
+    ddDateLabel.textContent = 'Ngày '+formatDate(ddDate.value);
+    populateClassSelect(ddClass, false);
+    renderCalendar();
+    if(state.classes.length===0){
+      ddNoClass.hidden = false; ddFormWrap.hidden = true;
+    } else {
+      ddNoClass.hidden = true; ddFormWrap.hidden = false;
+      if(!ddClass.value || !state.classes.some(function(c){return c.id===ddClass.value;})) ddClass.value = state.classes[0].id;
+      loadAttendanceForm();
+    }
+    renderTodayList();
+  }
+  ddClass.addEventListener('change', loadAttendanceForm);
+  qs('#dd-goto-class').addEventListener('click', function(){ qs('.tab-btn[data-tab="lophocsinh"]').click(); });
+
+  function loadAttendanceForm(){
+    var cls = state.classes.find(function(c){return c.id===ddClass.value;});
+    if(!cls) return;
+    var existing = state.sessions.find(function(s){return s.date===ddDate.value && s.classId===cls.id;});
+    ddContent.value = existing ? existing.content : '';
+    ddTime.value = existing ? (existing.time||'') : '';
+    ddList.innerHTML='';
+    cls.students.forEach(function(st){
+      var att = existing ? existing.attendance.find(function(a){return a.studentId===st.id;}) : null;
+      var present = att ? att.present : true;
+      var billable = att ? att.billable : true;
+      var comment = att ? att.comment : '';
+      ddList.appendChild(buildStudentCard(st, present, billable, comment));
+    });
+  }
+
+  function buildStudentCard(student, present, billable, comment){
+    var card = document.createElement('div');
+    card.className='att-card';
+    card.dataset.studentId = student.id;
+    card.dataset.present = String(present);
+    card.dataset.billable = String(present ? true : billable);
+
+    var head = document.createElement('div');
+    head.className='att-head';
+    head.innerHTML = '<span class="att-name">'+escapeHtml(student.name)+'</span><span class="att-price">'+formatVND(student.price)+'/buổi</span>';
+    card.appendChild(head);
+
+    var seg = document.createElement('div');
+    seg.className='seg';
+    var btnP = document.createElement('button');
+    btnP.type='button'; btnP.className='seg-btn'+(present?' active-present':''); btnP.textContent='Có mặt';
+    var btnA = document.createElement('button');
+    btnA.type='button'; btnA.className='seg-btn'+(!present?' active-absent':''); btnA.textContent='Vắng';
+    seg.appendChild(btnP); seg.appendChild(btnA);
+    card.appendChild(seg);
+
+    var billRow = document.createElement('label');
+    billRow.className='chk-row';
+    billRow.style.display = present ? 'none' : 'flex';
+    var chk = document.createElement('input');
+    chk.type='checkbox';
+    chk.checked = !present && billable;
+    billRow.appendChild(chk);
+    var chkSpan = document.createElement('span');
+    chkSpan.textContent='Vẫn tính phí buổi này';
+    billRow.appendChild(chkSpan);
+    card.appendChild(billRow);
+
+    btnP.addEventListener('click', function(){
+      card.dataset.present='true'; card.dataset.billable='true';
+      btnP.classList.add('active-present'); btnA.classList.remove('active-absent');
+      billRow.style.display='none';
+    });
+    btnA.addEventListener('click', function(){
+      card.dataset.present='false'; card.dataset.billable=String(chk.checked);
+      btnA.classList.add('active-absent'); btnP.classList.remove('active-present');
+      billRow.style.display='flex';
+    });
+    chk.addEventListener('change', function(){ card.dataset.billable=String(chk.checked); });
+
+    var comm = document.createElement('textarea');
+    comm.className='att-comment'; comm.rows=2;
+    comm.placeholder='Nhận xét cho '+student.name+'...';
+    comm.value = comment || '';
+    card.appendChild(comm);
+
+    return card;
+  }
+
+  qs('#dd-save').addEventListener('click', function(){
+    var cls = state.classes.find(function(c){return c.id===ddClass.value;});
+    if(!cls) return;
+    var attendance = qsa('.att-card', ddList).map(function(card){
+      return {
+        studentId: card.dataset.studentId,
+        present: card.dataset.present==='true',
+        billable: card.dataset.billable==='true',
+        comment: qs('textarea', card).value.trim()
+      };
+    });
+    var idx = state.sessions.findIndex(function(s){return s.date===ddDate.value && s.classId===cls.id;});
+    var record = {
+      id: idx>=0 ? state.sessions[idx].id : genId(),
+      date: ddDate.value, classId: cls.id, time: ddTime.value.trim(),
+      content: ddContent.value.trim(), attendance: attendance
+    };
+    if(idx>=0) state.sessions[idx]=record; else state.sessions.push(record);
+    saveSessions().then(function(){
+      showToast('Đã lưu buổi học');
+      renderTodayList();
+      renderCalendar();
+    });
+  });
+
+  function renderTodayList(){
+    var items = state.sessions.filter(function(s){return s.date===ddDate.value;});
+    ddTodayList.innerHTML='';
+    if(items.length===0){ ddTodayList.innerHTML='<p class="hint">Chưa có buổi học nào được lưu cho ngày này.</p>'; return; }
+    items.forEach(function(s){
+      var cls = state.classes.find(function(c){return c.id===s.classId;});
+      var row = document.createElement('div');
+      row.className='mini-row';
+      row.innerHTML =
+        '<div><strong>'+escapeHtml(cls?cls.name:'(lớp đã xóa)')+(s.time?' · '+escapeHtml(s.time):'')+'</strong>'+
+        '<p class="hint">'+escapeHtml(s.content||'Không có ghi chú')+'</p></div>'+
+        '<div class="mini-actions"><button class="btn-text" data-act="edit">Sửa</button>'+
+        '<button class="btn-text danger" data-act="del">Xóa</button></div>';
+      qs('[data-act="edit"]', row).addEventListener('click', function(){
+        ddClass.value = s.classId; loadAttendanceForm();
+        ddClass.closest('.card').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      qs('[data-act="del"]', row).addEventListener('click', function(){
+        if(!confirm('Xóa buổi học này?')) return;
+        state.sessions = state.sessions.filter(function(x){return x.id!==s.id;});
+        saveSessions().then(function(){ renderTodayList(); loadAttendanceForm(); renderCalendar(); });
+      });
+      ddTodayList.appendChild(row);
+    });
+  }
+
+  // ---------- Lịch sử ----------
+  function refreshHistory(){
+    populateClassSelect(qs('#ls-class'), true);
+    renderHistoryList();
+  }
+  qs('#ls-class').addEventListener('change', renderHistoryList);
+  qs('#ls-from').addEventListener('change', renderHistoryList);
+  qs('#ls-to').addEventListener('change', renderHistoryList);
+
+  function renderHistoryList(){
+    var classId = qs('#ls-class').value, from = qs('#ls-from').value, to = qs('#ls-to').value;
+    var items = state.sessions.slice();
+    if(classId) items = items.filter(function(s){return s.classId===classId;});
+    if(from) items = items.filter(function(s){return s.date>=from;});
+    if(to) items = items.filter(function(s){return s.date<=to;});
+    items.sort(function(a,b){return b.date.localeCompare(a.date);});
+    var wrap = qs('#ls-list'); wrap.innerHTML='';
+    if(items.length===0){ wrap.innerHTML='<p class="hint">Không có buổi học nào khớp bộ lọc.</p>'; return; }
+    items.forEach(function(s){
+      var cls = state.classes.find(function(c){return c.id===s.classId;});
+      var card = document.createElement('div');
+      card.className='card history-card';
+      var studentsHtml = s.attendance.map(function(a){
+        var st = cls ? cls.students.find(function(x){return x.id===a.studentId;}) : null;
+        var name = st ? st.name : '(học sinh đã xóa)';
+        var status = a.present
+          ? '<span class="badge badge-present">Có mặt</span>'
+          : '<span class="badge badge-absent">Vắng · '+(a.billable?'tính phí':'miễn phí')+'</span>';
+        var comment = a.comment ? '<p class="hint">'+escapeHtml(a.comment)+'</p>' : '';
+        return '<div class="hist-student"><div class="hist-student-head"><span>'+escapeHtml(name)+'</span>'+status+'</div>'+comment+'</div>';
+      }).join('');
+      card.innerHTML =
+        '<div class="history-top"><strong>'+formatDate(s.date)+' · '+escapeHtml(cls?cls.name:'(lớp đã xóa)')+'</strong>'+
+        '<div class="mini-actions"><button class="btn-text" data-act="edit">Sửa</button>'+
+        '<button class="btn-text danger" data-act="del">Xóa</button></div></div>'+
+        '<p class="hint">'+escapeHtml(s.content||'Không có ghi chú nội dung')+'</p>'+
+        '<div class="hist-students">'+studentsHtml+'</div>';
+      qs('[data-act="edit"]', card).addEventListener('click', function(){
+        qs('.tab-btn[data-tab="diemdanh"]').click();
+        ddDate.value = s.date; ddClass.value = s.classId;
+        var d = new Date(s.date+'T00:00:00');
+        calState.year = d.getFullYear(); calState.month = d.getMonth();
+        ddDateLabel.textContent = 'Ngày '+formatDate(s.date);
+        renderCalendar();
+        loadAttendanceForm();
+        renderTodayList();
+      });
+      qs('[data-act="del"]', card).addEventListener('click', function(){
+        if(!confirm('Xóa buổi học này?')) return;
+        state.sessions = state.sessions.filter(function(x){return x.id!==s.id;});
+        saveSessions().then(function(){ renderHistoryList(); renderCalendar(); });
+      });
+      wrap.appendChild(card);
+    });
+  }
+
+  // ---------- Lớp & học sinh ----------
+  function refreshClasses(){ renderClassList(); }
+
+  function newStudentRowEl(){
+    var row = document.createElement('div');
+    row.className='student-row';
+    row.innerHTML =
+      '<input type="text" class="s-name" placeholder="Tên học sinh">'+
+      '<input type="number" class="s-price" placeholder="Giá/buổi" min="0">'+
+      '<input type="text" class="s-contact" placeholder="SĐT phụ huynh (tuỳ chọn)">'+
+      '<button type="button" class="row-remove" title="Xóa dòng">✕</button>';
+    qs('.row-remove', row).addEventListener('click', function(){ row.remove(); });
+    return row;
+  }
+
+  qs('#lh-add-toggle').addEventListener('click', function(){
+    var form = qs('#lh-new-form');
+    form.hidden = !form.hidden;
+    if(!form.hidden && qs('#lh-new-students').children.length===0){ qs('#lh-new-students').appendChild(newStudentRowEl()); }
+  });
+  qs('#lh-new-cancel').addEventListener('click', function(){
+    qs('#lh-new-form').hidden=true; qs('#lh-new-name').value=''; qs('#lh-new-students').innerHTML='';
+  });
+  qs('#lh-new-addrow').addEventListener('click', function(){ qs('#lh-new-students').appendChild(newStudentRowEl()); });
+
+  qs('#lh-new-save').addEventListener('click', function(){
+    var name = qs('#lh-new-name').value.trim();
+    if(!name){ alert('Nhập tên lớp trước đã nhé.'); return; }
+    var rows = qsa('.student-row', qs('#lh-new-students'));
+    var students = rows.map(function(r){
+      return { id:genId(), name:qs('.s-name',r).value.trim(), price:Number(qs('.s-price',r).value)||0, contact:qs('.s-contact',r).value.trim() };
+    }).filter(function(s){return s.name;});
+    if(students.length===0){ alert('Thêm ít nhất 1 học sinh cho lớp này nhé.'); return; }
+    state.classes.push({id:genId(), name:name, students:students});
+    saveClasses().then(function(){
+      qs('#lh-new-form').hidden=true; qs('#lh-new-name').value=''; qs('#lh-new-students').innerHTML='';
+      showToast('Đã thêm lớp mới');
+      renderClassList();
+    });
+  });
+
+  function renderClassList(){
+    var wrap = qs('#lh-list'); wrap.innerHTML='';
+    if(state.classes.length===0){ wrap.innerHTML='<p class="hint">Chưa có lớp nào.</p>'; return; }
+    state.classes.forEach(function(cls){
+      var card = document.createElement('div');
+      card.className='card class-card';
+      card.innerHTML =
+        '<div class="class-head"><input type="text" class="class-name-input" value="'+escapeHtml(cls.name)+'">'+
+        '<button class="btn-text danger" data-act="del-class" type="button">Xóa lớp</button></div>'+
+        '<div class="student-rows" data-students></div>'+
+        '<div class="row-actions">'+
+        '<button class="btn-outline small" data-act="add-student" type="button">+ Thêm học sinh</button>'+
+        '<button class="btn-primary small" data-act="save-class" type="button">Lưu thay đổi</button></div>';
+      var rowsWrap = qs('[data-students]', card);
+      cls.students.forEach(function(st){
+        var row = document.createElement('div');
+        row.className='student-row'; row.dataset.studentId = st.id;
+        row.innerHTML =
+          '<input type="text" class="s-name" value="'+escapeHtml(st.name)+'">'+
+          '<input type="number" class="s-price" value="'+st.price+'" min="0">'+
+          '<input type="text" class="s-contact" value="'+escapeHtml(st.contact||'')+'">'+
+          '<button type="button" class="row-remove" title="Xóa học sinh">✕</button>';
+        qs('.row-remove', row).addEventListener('click', function(){
+          if(qsa('.student-row', rowsWrap).length<=1){ alert('Lớp cần ít nhất 1 học sinh.'); return; }
+          if(!confirm('Xóa học sinh này khỏi lớp?')) return;
+          row.remove();
+        });
+        rowsWrap.appendChild(row);
+      });
+      qs('[data-act="add-student"]', card).addEventListener('click', function(){ rowsWrap.appendChild(newStudentRowEl()); });
+      qs('[data-act="save-class"]', card).addEventListener('click', function(){
+        var newName = qs('.class-name-input', card).value.trim();
+        if(!newName){ alert('Tên lớp không được để trống.'); return; }
+        var rows = qsa('.student-row', rowsWrap);
+        var students = rows.map(function(r){
+          return { id:r.dataset.studentId||genId(), name:qs('.s-name',r).value.trim(), price:Number(qs('.s-price',r).value)||0, contact:qs('.s-contact',r).value.trim() };
+        }).filter(function(s){return s.name;});
+        if(students.length===0){ alert('Lớp cần ít nhất 1 học sinh.'); return; }
+        cls.name = newName; cls.students = students;
+        saveClasses().then(function(){ showToast('Đã lưu thay đổi'); renderClassList(); });
+      });
+      qs('[data-act="del-class"]', card).addEventListener('click', function(){
+        if(!confirm('Xóa lớp "'+cls.name+'"? Các buổi học đã lưu của lớp này vẫn được giữ trong lịch sử.')) return;
+        state.classes = state.classes.filter(function(c){return c.id!==cls.id;});
+        saveClasses().then(renderClassList);
+      });
+      wrap.appendChild(card);
+    });
+  }
+
+  // ---------- Học phí ----------
+  function refreshHocPhiOptions(){
+    var sel = qs('#hp-student'); sel.innerHTML='';
+    state.classes.forEach(function(cls){
+      cls.students.forEach(function(st){
+        var o=document.createElement('option'); o.value=st.id; o.textContent=st.name+' — '+cls.name;
+        sel.appendChild(o);
+      });
+    });
+    if(!qs('#hp-month').value) qs('#hp-month').value = currentMonthStr();
+    qs('#hp-result').innerHTML='';
+
+    populateClassSelect(qs('#hpg-class'), false);
+    if(!qs('#hpg-month').value) qs('#hpg-month').value = currentMonthStr();
+    qs('#hpg-result').innerHTML='';
+  }
+
+  function calcBill(studentId, monthValue){
+    var found = findStudent(studentId);
+    if(!found) return null;
+    var rows = state.sessions
+      .filter(function(s){ return s.classId===found.cls.id && s.date.slice(0,7)===monthValue; })
+      .map(function(s){
+        var att = s.attendance.find(function(a){return a.studentId===studentId;});
+        if(!att || !att.billable) return null;
+        return {date:s.date, content:s.content};
+      })
+      .filter(Boolean)
+      .sort(function(a,b){return a.date.localeCompare(b.date);});
+    return {student:found.student, cls:found.cls, rows:rows, total: rows.length*found.student.price};
+  }
+
+  qs('#hp-calc').addEventListener('click', function(){
+    var studentId = qs('#hp-student').value, monthValue = qs('#hp-month').value;
+    if(!studentId || !monthValue){ alert('Chọn học sinh và tháng nhé.'); return; }
+    renderBillResult(calcBill(studentId, monthValue), monthValue);
+  });
+
+  qs('#hpg-calc').addEventListener('click', function(){
+    var classId = qs('#hpg-class').value, monthValue = qs('#hpg-month').value;
+    if(!classId || !monthValue){ alert('Chọn lớp và tháng nhé.'); return; }
+    var cls = state.classes.find(function(c){return c.id===classId;});
+    if(!cls){ qs('#hpg-result').innerHTML='<p class="hint">Không tìm thấy lớp.</p>'; return; }
+    var bills = cls.students.map(function(st){ return calcBill(st.id, monthValue); }).filter(Boolean);
+    renderGroupResult(cls, bills, monthValue);
+  });
+
+  function renderGroupResult(cls, bills, monthValue){
+    var wrap = qs('#hpg-result');
+    var parts = monthValue.split('-'), monthLabel = 'Tháng '+Number(parts[1])+'/'+parts[0];
+    if(bills.length===0){ wrap.innerHTML='<p class="hint">Lớp này chưa có học sinh.</p>'; return; }
+    var groupTotal = bills.reduce(function(sum,b){return sum+b.total;}, 0);
+    var rowsHtml = bills.map(function(b, i){
+      return '<div class="mini-row" data-idx="'+i+'">'+
+        '<div><strong>'+escapeHtml(b.student.name)+'</strong>'+
+        '<p class="hint">'+b.rows.length+' buổi × '+formatVND(b.student.price)+' = '+formatVND(b.total)+'</p></div>'+
+        '<div class="mini-actions"><button class="btn-outline small" data-act="export" type="button">Xuất bill</button></div></div>';
+    }).join('');
+    wrap.innerHTML =
+      '<div class="card">'+
+      '<p class="hint">'+escapeHtml(cls.name)+' · '+monthLabel+' · '+bills.length+' học sinh</p>'+
+      '<div class="hero-amount" style="font-size:28px;">'+formatVND(groupTotal)+'</div>'+
+      '<p class="hint">Tổng học phí cả lớp trong tháng</p>'+
+      '<div class="mini-list" style="margin-top:12px;">'+rowsHtml+'</div>'+
+      '</div>';
+    qsa('[data-act="export"]', wrap).forEach(function(btn, i){
+      btn.addEventListener('click', function(){ exportBillPNG(bills[i], monthLabel); });
+    });
+  }
+
+  function renderBillResult(bill, monthValue){
+    var wrap = qs('#hp-result');
+    if(!bill){ wrap.innerHTML='<p class="hint">Không tìm thấy học sinh.</p>'; return; }
+    var parts = monthValue.split('-'), monthLabel = 'Tháng '+Number(parts[1])+'/'+parts[0];
+    var tableHtml = bill.rows.length
+      ? '<table class="ledger-table"><thead><tr><th>Ngày</th><th>Nội dung</th></tr></thead><tbody>'+
+        bill.rows.map(function(r){ return '<tr><td>'+formatDate(r.date)+'</td><td>'+escapeHtml(r.content||'—')+'</td></tr>'; }).join('')+
+        '</tbody></table>'
+      : '<p class="hint">Chưa có buổi học nào được tính phí trong tháng này.</p>';
+    wrap.innerHTML =
+      '<div class="card bill-summary">'+
+      '<p class="hint">'+escapeHtml(bill.student.name)+' · '+escapeHtml(bill.cls.name)+' · '+monthLabel+'</p>'+
+      '<div class="hero-amount">'+formatVND(bill.total)+'</div>'+
+      '<p class="hint">'+bill.rows.length+' buổi × '+formatVND(bill.student.price)+'</p>'+
+      tableHtml+
+      '<div class="row-actions" style="justify-content:center;">'+
+      '<button class="btn-primary" id="hp-export" type="button">Xuất ảnh bill (PNG)</button>'+
+      '<button class="btn-outline" id="hp-copy" type="button">Sao chép văn bản</button></div></div>';
+    qs('#hp-export').addEventListener('click', function(){ exportBillPNG(bill, monthLabel); });
+    qs('#hp-copy').addEventListener('click', function(){
+      var lines = ['PHIẾU HỌC PHÍ','Học sinh: '+bill.student.name,'Lớp: '+bill.cls.name,'Tháng: '+monthLabel]
+        .concat(bill.rows.map(function(r){ return '- '+formatDate(r.date)+': '+(r.content||'—'); }))
+        .concat(['Tổng: '+bill.rows.length+' buổi × '+formatVND(bill.student.price)+' = '+formatVND(bill.total)]);
+      var s = state.settings;
+      if(s.bankName || s.bankAccount) lines.push('Chuyển khoản: '+(s.bankName||'')+' - '+(s.bankAccount||'')+' - '+(s.accountHolder||''));
+      navigator.clipboard.writeText(lines.join('\n')).then(function(){ showToast('Đã sao chép'); }).catch(function(){ showToast('Không sao chép được'); });
+    });
+  }
+
+  function buildBillHTML(bill, monthLabel){
+    var s = state.settings;
+    var rowsHtml = bill.rows.map(function(r){ return '<tr><td>'+formatDate(r.date)+'</td><td>'+escapeHtml(r.content||'—')+'</td></tr>'; }).join('');
+    var qrHtml = s.qrImage ? '<div class="bill-bank-qr"><img src="'+s.qrImage+'" alt="Mã QR chuyển khoản"></div>' : '';
+    var bankHtml = (s.bankName||s.bankAccount||s.qrImage) ?
+      '<div class="bill-bank">'+qrHtml+'<div class="bill-bank-text"><div class="bank-label">Chuyển khoản</div><div>'+escapeHtml(s.bankName||'')+' — '+escapeHtml(s.bankAccount||'')+'</div><div>'+escapeHtml(s.accountHolder||'')+'</div></div></div>' : '';
+    var payHtml = '<div class="bill-pay-box"><span class="bill-pay-label">Cần thanh toán:</span><span class="bill-pay-amount">'+formatVND(bill.total)+'</span></div>'+
+      '<div class="bill-words">(Bằng chữ: '+numberToVietnameseWords(bill.total)+')</div>';
+    var greetingHtml = '<div class="bill-greeting">'+
+      '<p class="bill-greeting-date">'+formatDateGreeting(todayStr())+'</p>'+
+      '<h3 class="bill-greeting-title">Kính gửi phụ huynh,</h3>'+
+      '<p class="bill-greeting-text">Học phí của <strong>'+escapeHtml(bill.student.name)+'</strong> ('+bill.rows.length+' buổi học) là <strong class="bill-amount-highlight">'+formatVND(bill.total)+'</strong>. Quý phụ huynh vui lòng thanh toán theo thông tin bên dưới.</p>'+
+      '</div>';
+    return '<div class="bill-card">'+
+      '<div class="bill-top"><div class="bill-org">'+escapeHtml(s.teacherName||'Giáo viên tiếng Trung')+'</div><div class="bill-seal">签收</div></div>'+
+      greetingHtml+
+      '<h2 class="bill-title">Phiếu học phí</h2>'+
+      '<div class="bill-meta"><div><span>Học sinh</span><strong>'+escapeHtml(bill.student.name)+'</strong></div>'+
+      '<div><span>Lớp</span><strong>'+escapeHtml(bill.cls.name)+'</strong></div>'+
+      '<div><span>Tháng</span><strong>'+monthLabel+'</strong></div></div>'+
+      '<table class="bill-table"><thead><tr><th>Ngày học</th><th>Nội dung</th></tr></thead><tbody>'+rowsHtml+'</tbody></table>'+
+      '<div class="bill-sum"><span>'+bill.rows.length+' buổi × '+formatVND(bill.student.price)+'</span><div class="bill-total">'+formatVND(bill.total)+'</div></div>'+
+      payHtml+
+      bankHtml+'</div>';
+  }
+
+  function exportBillPNG(bill, monthLabel){
+    var area = qs('#billRenderArea');
+    area.innerHTML = buildBillHTML(bill, monthLabel);
+    var cardEl = qs('.bill-card', area);
+    if(typeof html2canvas==='undefined'){ showToast('Không tải được công cụ xuất ảnh, thử lại sau.'); return; }
+    var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    ready.then(function(){
+      return html2canvas(cardEl, {scale:2, backgroundColor:'#ffffff', useCORS:true});
+    }).then(function(canvas){
+      canvas.toBlob(function(blob){
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href=url; a.download = 'Bill_'+bill.student.name.replace(/\s+/g,'_')+'_'+monthLabel.replace(/\s+/g,'_')+'.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Đã tải ảnh bill');
+      });
+    }).catch(function(){ showToast('Xuất ảnh thất bại, thử lại nhé.'); });
+  }
+
+  // ---------- Cài đặt ----------
+  var pendingQrImage = null; // null = chưa đổi, '' = vừa xoá, 'data:...' = ảnh mới
+  function renderQrPreview(dataUrl){
+    var wrap = qs('#cd-qr-preview');
+    if(dataUrl){
+      wrap.innerHTML = '<img src="'+dataUrl+'" alt="Mã QR chuyển khoản">';
+      qs('#cd-qr-remove').hidden = false;
+    }else{
+      wrap.innerHTML = '<p class="empty-note">Chưa có mã QR</p>';
+      qs('#cd-qr-remove').hidden = true;
+    }
+  }
+  function refreshSettingsForm(){
+    qs('#cd-teacher').value = state.settings.teacherName||'';
+    qs('#cd-bank').value = state.settings.bankName||'';
+    qs('#cd-account').value = state.settings.bankAccount||'';
+    qs('#cd-holder').value = state.settings.accountHolder||'';
+    pendingQrImage = null;
+    renderQrPreview(state.settings.qrImage||'');
+  }
+  qs('#cd-qr-file').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 4*1024*1024){ alert('Ảnh quá lớn, vui lòng chọn ảnh dưới 4MB.'); e.target.value=''; return; }
+    var reader = new FileReader();
+    reader.onload = function(){
+      pendingQrImage = reader.result;
+      renderQrPreview(pendingQrImage);
+    };
+    reader.readAsDataURL(file);
+    e.target.value='';
+  });
+  qs('#cd-qr-remove').addEventListener('click', function(){
+    pendingQrImage = '';
+    renderQrPreview('');
+  });
+  qs('#cd-save').addEventListener('click', function(){
+    var qrImage = pendingQrImage===null ? (state.settings.qrImage||'') : pendingQrImage;
+    state.settings = {
+      teacherName: qs('#cd-teacher').value.trim(),
+      bankName: qs('#cd-bank').value.trim(),
+      bankAccount: qs('#cd-account').value.trim(),
+      accountHolder: qs('#cd-holder').value.trim(),
+      qrImage: qrImage
+    };
+    pendingQrImage = null;
+    saveSettings().then(function(){ showToast('Đã lưu cài đặt'); });
+  });
+  qs('#cd-export').addEventListener('click', function(){
+    var data = JSON.stringify({classes:state.classes, sessions:state.sessions, settings:state.settings}, null, 2);
+    var blob = new Blob([data], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href=url; a.download='backup_diem_danh_hoc_phi_'+todayStr()+'.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  });
+  qs('#cd-import').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(!confirm('Khôi phục sẽ GHI ĐÈ toàn bộ dữ liệu hiện tại. Tiếp tục?')) return;
+        state.classes = data.classes||[];
+        state.sessions = data.sessions||[];
+        state.settings = data.settings||state.settings;
+        Promise.all([saveClasses(), saveSessions(), saveSettings()]).then(function(){
+          showToast('Đã khôi phục dữ liệu');
+          refreshSettingsForm(); refreshDiemDanh();
+        });
+      }catch(err){ alert('File không hợp lệ.'); }
+    };
+    reader.readAsText(file);
+    e.target.value='';
+  });
+
+  // ---------- Init ----------
+  function loadAll(){
+    state.settings = safeGet('settings', {teacherName:'',bankName:'',bankAccount:'',accountHolder:'',qrImage:''});
+    state.classes = safeGet('classes', []);
+    state.sessions = safeGet('sessions', []);
+    return Promise.resolve();
+  }
+
+  loadAll().then(function(){
+    qs('#loading').hidden = true;
+    qs('#app').hidden = false;
+    refreshDiemDanh();
+    refreshSettingsForm();
+  });
+
+})();
+</script>
+</body>
+</html>
